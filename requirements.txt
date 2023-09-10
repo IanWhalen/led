@@ -1,0 +1,13 @@
+googleapis-common-protos==1.60.0
+grpclib==0.4.5
+h2==4.1.0
+hpack==4.0.0
+hyperframe==6.0.1
+multidict==6.0.4
+mypy==1.5.1
+mypy-extensions==1.0.0
+Pillow==10.0.0
+protobuf==4.24.3
+rpi-ws281x==5.0.0
+typing_extensions==4.7.1
+viam-sdk==0.5.1
