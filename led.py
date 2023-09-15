@@ -2,6 +2,8 @@ import time
 from typing import ClassVar, Mapping
 from typing_extensions import Self
 
+import logging
+
 from viam.components.generic import Generic
 from viam.resource.types import Model, ModelFamily
 from viam.utils import ValueTypes
@@ -24,24 +26,23 @@ LED_BRIGHTNESS = 255  # Set to 0 for darkest and 255 for brightest
 LED_INVERT = False  # True to invert the signal (when using NPN transistor level shift)
 LED_CHANNEL = 0  # set to '1' for GPIOs 13, 19, 41, 45 or 53
 
+ORDER = "RGB"
+
+STRIP = Adafruit_NeoPixel(
+    LED_COUNT,
+    LED_PIN,
+    LED_FREQ_HZ,
+    LED_DMA,
+    LED_INVERT,
+    LED_BRIGHTNESS,
+    LED_CHANNEL,
+)
+STRIP.begin()
+
+LOG = logging.getLogger()
 
 class Led(Generic):
     MODEL: ClassVar[Model] = Model(ModelFamily("ianwhalen", "demo"), "led_ring")
-
-    def __init__(self):
-        self.ORDER = "RGB"
-
-        self.strip = Adafruit_NeoPixel(
-            LED_COUNT,
-            LED_PIN,
-            LED_FREQ_HZ,
-            LED_DMA,
-            LED_INVERT,
-            LED_BRIGHTNESS,
-            LED_CHANNEL,
-        )
-        self.strip.begin()
-        super().__init__()
 
     async def do_command(
         self,
@@ -50,6 +51,7 @@ class Led(Generic):
         timeout: Optional[float] = None,
         **kwargs
     ) -> Mapping[str, ValueTypes]:
+        LOG.info("entering `do_command`")
         result = {}
         for name, _ in command.items():
             if name == "test":
@@ -75,10 +77,10 @@ class Led(Generic):
 
     def color_wipe(self, color, wait_ms=50):
         """Wipe color across display a pixel at a time."""
-        color = self.LED_TYPR(self.ORDER, color)
-        for i in range(self.strip.numPixels()):
-            self.strip.setPixelColor(i, color)
-            self.strip.show()
+        color = self.LED_TYPR(ORDER, color)
+        for i in range(STRIP.numPixels()):
+            STRIP.setPixelColor(i, color)
+            STRIP.show()
             time.sleep(wait_ms / 1000.0)
 
     def LED_TYPR(self, order, R_G_B):

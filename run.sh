@@ -5,9 +5,9 @@ cd `dirname $0`
 VENV_NAME="venv"
 PYTHON="$VENV_NAME/bin/python"
 
-sudo python -m venv $VENV_NAME
-sudo $PYTHON -m pip install -r requirements.txt
+python -m venv $VENV_NAME
+$PYTHON -m pip install -r requirements.txt
 
 # Be sure to use `exec` so that termination signals reach the python process,
 # or handle forwarding termination signals manually
-exec sudo $PYTHON led/main.py $@
+exec $PYTHON ./main.py $@
