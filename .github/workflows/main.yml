@@ -1,0 +1,21 @@
+on:
+  push:
+  release:
+    types: [released]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: build
+      run: echo "tar -czf module.tar.gz run.sh requirements.txt led.py main.py" && false
+    - uses: viamrobotics/upload-module@v1
+      if: github.event_name == 'release'
+      with:
+        module-path: module.tar.gz
+        org-id: a3a451d6-5564-4954-b0aa-e57d5f16cab7
+        platform: linux/arm64
+        version: ${{ github.event_name == 'release' && github.ref_name || format('0.0.0-{0}.{1}', github.ref_name, github.run_number) }} # <-- see 'Versioning' section below for explanation
+        key-id: ${{ secrets.viam_key_id }}
+        key-value: ${{ secrets.viam_key_value }}
