@@ -1,0 +1,13 @@
+{
+  "module_id": "ianwhalen:neopixel",
+  "visibility": "public",
+  "url": "https://github.com/ianwhalen/led",
+  "description": "A driver for the Adafruit Neopixel line of LED displays.",
+  "models": [
+    {
+      "api": "rdk:component:generic",
+      "model": "ianwhalen:ianwhalen:neopixel"
+    }
+  ],
+  "entrypoint": "run.sh"
+}

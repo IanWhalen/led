@@ -1,3 +1,4 @@
+from functools import wraps
 import time
 from typing import ClassVar, Mapping, Optional
 
@@ -11,15 +12,11 @@ from viam.resource.base import ResourceBase
 from viam.resource.types import Model, ModelFamily
 from viam.utils import ValueTypes
 
-GREEN = 65280
-BLUE = 255
-CLEAR = 0
-
 LOG = getLogger("led")
 
 
 class Led(Generic):
-    MODEL: ClassVar[Model] = Model(ModelFamily("ianwhalen", "demo"), "led_ring")
+    MODEL: ClassVar[Model] = Model(ModelFamily("ianwhalen", "ianwhalen"), "neopixel")
 
     def __init__(self, name: str) -> None:
         self.STRIP = Adafruit_NeoPixel(self.led_count, self.led_pin)
@@ -35,31 +32,23 @@ class Led(Generic):
         **kwargs,
     ) -> Mapping[str, ValueTypes]:
         result = {}
-        for name, _ in command.items():
+        for name, args in command.items():
             if name == "test":
                 await self.test_cycle()
                 result["color"] = f"flashed: {name}"
+            if name == "set_pixel_color":
+                await self.set_pixel_color(*args)
+                result[name] = True
+            if name == "show":
+                await self.show()
+                result[name] = True
         return result
 
-    async def test_cycle(self):
-        LOG.info("entering `test_cycle`")
-        try:
-            for color in [GREEN, BLUE, CLEAR]:
-                self.color_wipe(color)
-        except KeyboardInterrupt:
-            self.color_wipe(CLEAR)
+    async def set_pixel_color(self, i, color):
+        self.STRIP.setPixelColor(int(i), int(color))
 
-        LOG.info("End of program")
-
-    def color_wipe(self, color):
-        """Wipe color across display a pixel at a time."""
-        LOG.info(f"entering `color_wipe` with color: {color}")
-        for i in range(self.STRIP.numPixels()):
-            self.STRIP.setPixelColor(i, color)
-            self.STRIP.show()
-            LOG.info(f"Showed {color}.")
-            time.sleep(1)
-        time.sleep(1)
+    async def show(self):
+        self.STRIP.show()
 
     @classmethod
     def new(
