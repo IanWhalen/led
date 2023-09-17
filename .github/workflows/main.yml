@@ -9,7 +9,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: build
-      run: echo "tar -czf module.tar.gz run.sh requirements.txt led.py main.py" && false
+      run: tar -czf module.tar.gz run.sh requirements.txt led.py main.py
     - uses: viamrobotics/upload-module@v1
       if: github.event_name == 'release'
       with:
