@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package viam.components.neopixel.v1;
+
+import "google/api/annotations.proto";
+
+service NeopixelService {
+  rpc SetPixelColor(SetPixelColorRequest) returns (SetPixelColorResponse) {
+    option (google.api.http) = {
+      post: "/acme/api/v1/service/neopixel/{name}/set_pixel_color"
+    };
+  }
+
+  rpc Show(ShowRequest) returns (ShowResponse) {
+    option (google.api.http) = {
+      post: "/acme/api/v1/service/neopixel/{name}/show"
+    };
+  }
+}
+
+message SetPixelColorRequest {
+  string name = 1;
+  int32 index = 2;
+  int32 color = 3;
+}
+
+message SetPixelColorResponse {
+  bool success = 1;
+}
+
+message ShowRequest {
+  string name = 1;
+}
+
+message ShowResponse {
+  bool success = 1;
+}

@@ -1,13 +1,8 @@
 #!/bin/sh
 cd `dirname $0`
 
-# Create a virtual environment to run our code
-VENV_NAME="venv"
-PYTHON="$VENV_NAME/bin/python"
-
-python -m venv $VENV_NAME
-$PYTHON -m pip install -r requirements.txt
+pip install -r requirements.txt
 
 # Be sure to use `exec` so that termination signals reach the python process,
 # or handle forwarding termination signals manually
-exec $PYTHON ./main.py $@
+exec python3 -m src.main $@
