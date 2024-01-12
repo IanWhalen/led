@@ -17,7 +17,9 @@ Example configuration for the Attributes section of the component looks like thi
 
 led_count refers to the number of lights you have on the strip or the ring, so replace it according to the model you have. You will also have to update the "for pixel in range(your led count)" line in the code example to match this number. 
 
-led_pin refers to which GPIO pin the lights are wired to, so replace it according to which pin you are using on the board. NeoPixels must be connected to 19 GPIO10, 32 GPIO12, 12 GPIO18, or 40 GPIO21 to work! GPIO18 is the standard pin, thus this module defaults to led_pin 12.
+led_pin refers to which GPIO pin the lights are wired to, so replace it according to which pin you are using on the board. NeoPixels must be connected to 19 GPIO10, 32 GPIO12, 12 GPIO18, or 40 GPIO21 to work! GPIO18 is the standard pin, thus this module defaults to led_pin 18. 
+
+[GPIO 18(https://pinout.xyz/pinout/pin12_gpio18/) is used by PCM to provide a clock signal to an external audio device such as a DAC chip. The PWM0 output of GPIO 18 is particularly useful, in combination with some fast, direct memory access trickery, for driving devices with very specific timings. The WS2812 LEDs on the [Unicorn HAT](https://pinout.xyz/pinout/unicorn_hat) are a good example of this in action, as well as Adafruit Neopixel strips and rings. 
 
 Save your config after adding the Attributes. 
 
