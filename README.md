@@ -17,7 +17,7 @@ Example configuration for the Attributes section of the component looks like thi
 
 led_count refers to the number of lights you have on the strip or the ring, so replace it according to the model you have. You will also have to update the "for pixel in range(your led count)" line in the code example to match this number. 
 
-led_pin refers to which GPIO pin the lights are wired to, so replace it according to which pin you are using on the board. 
+led_pin refers to which GPIO pin the lights are wired to, so replace it according to which pin you are using on the board. NeoPixels must be connected to 19 GPIO10, 32 GPIO12, 12 GPIO18, or 40 GPIO21 to work! GPIO18 is the standard pin, thus this module defaults to led_pin 12.
 
 Save your config after adding the Attributes. 
 
@@ -46,9 +46,10 @@ async def main():
     
     #replace "thing" with the actual name of the generic component in the machine config 
     led = Generic.from_robot(robot, "thing")
+    #decimal format green, 65280
     for color in [65280, 0]:
         #replace with the actual number of lights on the ring or strip
-        for pixel in range(7):
+        for pixel in range(24):
             await led.do_command({"set_pixel_color": [pixel, color]})
             await led.do_command({"show": []})
             time.sleep(1)
@@ -66,5 +67,4 @@ Requires a library that doesn't build on a Mac, so you need to develop on Linux.
 
 ## NOTES
 
-Remember to disable sound when running on a Raspberry Pi.
-
+Remember to disable sound when running on a Raspberry Pi to use GPIO18. This can be done in /boot/config.txt by changing "dtparam=audio=on" to "dtparam=audio=off" and rebooting.
