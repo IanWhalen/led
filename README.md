@@ -12,7 +12,7 @@ Example configuration for the Attributes section of the component looks like thi
 
 {
   "led_count": 24,
-  "led_pin": 12
+  "led_pin": 18
 }
 
 led_count refers to the number of lights you have on the strip or the ring, so replace it according to the model you have. You will also have to update the "for pixel in range(your led count)" line in the code example to match this number. 
