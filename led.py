@@ -33,9 +33,6 @@ class Led(Generic):
     ) -> Mapping[str, ValueTypes]:
         result = {}
         for name, args in command.items():
-            if name == "test":
-                await self.test_cycle()
-                result["color"] = f"flashed: {name}"
             if name == "set_pixel_color":
                 await self.set_pixel_color(*args)
                 result[name] = True
