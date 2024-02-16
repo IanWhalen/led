@@ -16,7 +16,7 @@ LOG = getLogger("led")
 
 
 class Led(Generic):
-    MODEL: ClassVar[Model] = Model(ModelFamily("ianwhalen", "ianwhalen"), "neopixel")
+    MODEL: ClassVar[Model] = Model(ModelFamily("weatherbox", "weatherbox"), "neopixel")
 
     def __init__(self, name: str) -> None:
         self.STRIP = Adafruit_NeoPixel(self.led_count, self.led_pin)
@@ -58,3 +58,7 @@ class Led(Generic):
     @classmethod
     def validate_config(self, config: ComponentConfig) -> None:
         return None
+    
+    def __del__(self):
+        print("deleting self")
+        self.stop_thread()
