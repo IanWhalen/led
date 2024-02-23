@@ -33,6 +33,9 @@ class Led(Generic):
     ) -> Mapping[str, ValueTypes]:
         result = {}
         for name, args in command.items():
+            if name == "set_pixel_colors":
+                await self.set_pixel_colors(args)
+                result[name] = True
             if name == "set_pixel_color":
                 await self.set_pixel_color(*args)
                 result[name] = True
@@ -43,6 +46,11 @@ class Led(Generic):
 
     async def set_pixel_color(self, i, color):
         self.STRIP.setPixelColor(int(i), int(color))
+
+    async def set_pixel_colors(self, pixel_colors):
+        # LOG.info(pixel_colors)
+        for pix_color in pixel_colors:
+            self.STRIP.setPixelColor(int(pix_color[0]), int(pix_color[1]))
 
     async def show(self):
         self.STRIP.show()
