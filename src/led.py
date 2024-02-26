@@ -104,30 +104,46 @@ class Led(Generic):
             animation = self.get_animation(self.annimation_name)
             animation.animate()
 
-    def __init__(self, name: str) -> None:
-        self.STRIP = Adafruit_NeoPixel(self.led_count, self.led_pin)
-        self.STRIP.begin()
-
-        super().__init__(name)
-
     async def do_command(
-        self,
-        command: Mapping[str, ValueTypes],
-        *,
-        timeout: Optional[float] = None,
-        **kwargs,
+            self, command: Mapping[str, ValueTypes], *, timeout: Optional[float] = None,**kwargs,
     ) -> Mapping[str, ValueTypes]:
         result = {}
         for name, args in command.items():
-            if name == "set_pixel_colors":
-                await self.set_pixel_colors(args)
-                result[name] = True
-            if name == "set_pixel_color":
-                await self.set_pixel_color(*args)
-                result[name] = True
-            if name == "show":
-                await self.show()
-                result[name] = True
+            match name:
+                case "animation":
+                    self.annimation_name = args
+                case "speed":
+                    self.speed = args
+                case "colors":
+                    new_colors = []
+                    for color in args:
+                        new_colors.append(self.get_color(color))
+                    self.colors = new_colors
+                case "tail_length":
+                    self.tail_length = args
+                case "bounce":
+                    self.bounce = args
+                case "size":
+                    self.size = args
+                case "spacing":
+                    self.spacing = args
+                case "period":
+                    self.period = args
+                case "num_sparkles":
+                    self.num_sparkles = args
+                case "step":
+                    self.step = args
+                case "set_pixel_colors":
+                    await self.set_pixel_colors(args)
+                    result[name] = True
+                case "set_pixel_color":
+                    await self.set_pixel_color(*args)
+                    result[name] = True
+                case "show":
+                    await self.show()
+                    result[name] = True
+                    
+        self.regenerate_animations()
         return result
 
     async def set_pixel_color(self, i, color):
@@ -141,9 +157,7 @@ class Led(Generic):
         self.STRIP.show()
 
     @classmethod
-    def new(
-        cls, config: ComponentConfig, dependencies: Mapping[ResourceName, ResourceBase]
-    ) -> Self:
+    def new(cls, config: ComponentConfig, dependencies: Mapping[ResourceName, ResourceBase]) -> Self:
         cls.led_count = int(config.attributes.fields["led_count"].number_value)
         cls.led_pin = int(config.attributes.fields["led_pin"].number_value)
         led_module = cls(config.name)
