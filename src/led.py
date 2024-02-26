@@ -110,6 +110,7 @@ class Led(Generic):
         result = {}
         for name, args in command.items():
             match name:
+                # TODO should prob validate this
                 case "animation":
                     self.annimation_name = args
                 case "speed":
@@ -142,7 +143,7 @@ class Led(Generic):
                 case "show":
                     await self.show()
                     result[name] = True
-                    
+
         self.regenerate_animations()
         return result
 
