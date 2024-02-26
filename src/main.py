@@ -15,7 +15,7 @@ async def main():
     """This function creates and starts a new module, after adding all desired resource models.
     Resource creators must be registered to the resource registry before the module adds the resource model.
     """
-    LOGGER.info("Starting first-robotics-roborio module...")
+    LOGGER.info("Starting neopixel module")
 
     registration = ResourceCreatorRegistration(Led.new, Led.validate_config)
     Registry.register_resource_creator(Generic.SUBTYPE, Led.MODEL, registration)
