@@ -205,7 +205,7 @@ class LedModel(Generic):
         pin: microcontroller.Pin = self.initialize_pin(pin_number)
         order: any = self.initialize_pixel_order(pixel_order)
         self.pixels = neopixel.NeoPixel(
-            pin, num_pixels, brightness=brightness, auto_write=False, pixel_order=order
+            pin, num_pixels, brightness=brightness, pixel_order=order
         )
 
         self.regenerate_animations()
