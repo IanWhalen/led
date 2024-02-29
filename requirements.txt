@@ -4,3 +4,4 @@ viam-sdk
 rpi_ws281x
 adafruit-circuitpython-neopixel
 adafruit-circuitpython-led-animation
+RPi.GPIO
