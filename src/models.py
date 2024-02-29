@@ -53,7 +53,7 @@ class LedModel(Generic):
     pixels: neopixel.NeoPixel = None
     # Animation settings
     speed: float = 0.1
-    colors: list(str)= [RED]
+    colors = [RED]
     tail_length: int = 1
     bounce: bool = False
     size: int = 1
