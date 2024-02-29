@@ -44,10 +44,10 @@ from adafruit_led_animation.animation.customcolorchase import CustomColorChase
 from adafruit_led_animation.animation import Animation
 
 
-LOG = getLogger("led")
+LOG = logging.getLogger(__name__)
 
 
-class Led(Generic):
+class LedModel(Generic):
     MODEL: ClassVar[Model] = Model(ModelFamily("weatherbox", "weatherbox"), "neopixel")
 
     pixels: neopixel.NeoPixel = None

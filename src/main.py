@@ -1,11 +1,12 @@
 import asyncio
 import sys
+from viam import logging
 
-sys.path.append(".")
+sys.path.append("..")
 
 LOGGER = logging.getLogger(__name__)
 
-from led import Led
+from models import LedModel
 from viam.module.module import Module
 from viam.resource.registry import Registry, ResourceCreatorRegistration
 from viam.components.generic import Generic
@@ -17,11 +18,11 @@ async def main():
     """
     LOGGER.info("Starting neopixel module")
 
-    registration = ResourceCreatorRegistration(Led.new, Led.validate_config)
-    Registry.register_resource_creator(Generic.SUBTYPE, Led.MODEL, registration)
+    registration = ResourceCreatorRegistration(LedModel.new, LedModel.validate_config)
+    Registry.register_resource_creator(Generic.SUBTYPE, LedModel.MODEL, registration)
 
     module = Module.from_args()
-    module.add_model_from_registry(Generic.SUBTYPE, Led.MODEL)
+    module.add_model_from_registry(Generic.SUBTYPE, LedModel.MODEL)
     await module.start()
 
 if __name__ == "__main__":
