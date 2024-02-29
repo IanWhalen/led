@@ -18,7 +18,6 @@ from viam.proto.common import ResourceName
 from viam.resource.base import ResourceBase
 from viam.resource.types import Model
 # TODO: Convert to generic service
-from viam.component.generic import Generic
 from viam import logging
 
 from threading import Thread
