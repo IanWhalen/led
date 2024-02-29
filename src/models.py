@@ -25,6 +25,7 @@ from threading import Event
 
 import microcontroller
 import board
+import neopixel
 
 from adafruit_led_animation.color import AMBER, AQUA, BLACK, BLUE, GREEN, ORANGE, PINK, PURPLE, RED, WHITE, YELLOW, GOLD, JADE, MAGENTA, OLD_LACE, TEAL
 from adafruit_led_animation.animation.blink import Blink
