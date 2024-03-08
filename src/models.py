@@ -255,9 +255,9 @@ class LedModel(Generic):
         self.stop_thread()
 
         pin_number: str = config.attributes.fields["pin"].string_value
-        num_pixels: int = config.attributes.fields["num_pixels"].number_value
+        num_pixels: int = int(config.attributes.fields["num_pixels"].number_value)
         pixel_order: str = config.attributes.fields["pixel_order"].string_value
-        brightness: float = config.attributes.fields["brightness"].float_value
+        brightness: float = config.attributes.fields["brightness"].number_value
         pin: microcontroller.Pin = self.initialize_pin(pin_number)
         order: any = self.initialize_pixel_order(pixel_order)
         self.pixels = neopixel.NeoPixel(
