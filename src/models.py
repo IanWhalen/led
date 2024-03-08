@@ -42,6 +42,8 @@ from adafruit_led_animation.animation.rainbowchase import RainbowChase
 from adafruit_led_animation.animation.rainbowsparkle import RainbowSparkle
 from adafruit_led_animation.animation.customcolorchase import CustomColorChase
 from adafruit_led_animation.animation import Animation
+import adafruit_led_animation
+
 
 
 LOG = logging.getLogger(__name__)
@@ -64,19 +66,19 @@ class LedModel(Generic):
 
     # Animation configuration
     animation_name: str = 'blink'
-    blink: Animation = Blink(pixels, speed=speed, color=colors[0])
-    colorcycle: Animation = ColorCycle(pixels, speed=speed, colors=colors)
-    comet: Animation = Comet(pixels, speed=speed, color=colors[0], tail_length=tail_length, bounce=bounce)
-    chase: Animation = Chase(pixels, speed=speed, size=size, spacing=spacing, color=colors[0])
-    pulse: Animation = Pulse(pixels, speed=speed, period=period, color=colors[0])
-    sparkle: Animation = Sparkle(pixels, speed=speed, color=colors[0], num_sparkles=num_sparkles)
-    solid: Animation = Solid(pixels, color=colors[0])
-    rainbow: Animation = Rainbow(pixels, speed=speed, period=period)
-    sparkle_pulse: Animation = SparklePulse(pixels, speed=speed, period=period, color=colors[0])
-    rainbow_comet: Animation = RainbowComet(pixels, speed=speed, tail_length=tail_length, bounce=bounce)
-    rainbow_chase: Animation = RainbowChase(pixels, speed=speed, size=size, spacing=spacing, step=step)
-    rainbow_sparkle: Animation = RainbowSparkle(pixels, speed=speed, num_sparkles=num_sparkles)
-    custom_color_chase: Animation = CustomColorChase(pixels, speed=speed, size=size, spacing=spacing, colors=colors)
+    blink: Animation = None
+    colorcycle: Animation = None
+    comet: Animation = None
+    chase: Animation = None
+    pulse: Animation = None
+    sparkle: Animation = None
+    solid: Animation = None
+    rainbow: Animation = None
+    sparkle_pulse: Animation = None
+    rainbow_comet: Animation = None
+    rainbow_chase: Animation =None
+    rainbow_sparkle: Animation = None
+    custom_color_chase: Animation = None
 
     # Animation thread settings
     thread = None
@@ -146,16 +148,70 @@ class LedModel(Generic):
 
         self.regenerate_animations()
         return result
+    
+    def regenerate_animations(self):
+        self.blink = Blink(self.pixels, speed=self.speed, color=self.colors[0])
+        self.colorcycle = ColorCycle(self.pixels, speed=self.speed, colors=self.colors)
+        self.comet = Comet(self.pixels, speed=self.speed, color=self.colors[0], tail_length=self.tail_length, bounce=self.bounce)
+        self.chase = Chase(self.pixels, speed=self.speed, size=self.size, spacing=self.spacing, color=self.colors[0])
+        self.pulse = Pulse(self.pixels, speed=self.speed, period=self.period, color=self.colors[0])
+        self.sparkle = Sparkle(self.pixels, speed=self.speed, color=self.colors[0], num_sparkles=self.num_sparkles)
+        self.solid = Solid(self.pixels, color=self.colors[0])
+        self.rainbow = Rainbow(self.pixels, speed=self.speed, period=self.period)
+        self.sparkle_pulse = SparklePulse(self.pixels, speed=self.speed, period=self.period, color=self.colors[0])
+        self.rainbow_comet = RainbowComet(self.pixels, speed=self.speed, tail_length=self.tail_length, bounce=self.bounce)
+        self.rainbow_chase = RainbowChase(self.pixels, speed=self.speed, size=self.size, spacing=self.spacing, step=self.step)
+        self.rainbow_sparkle = RainbowSparkle(self.pixels, speed=self.speed, num_sparkles=self.num_sparkles)
+        self.custom_color_chase = CustomColorChase(self.pixels, speed=self.speed, size=self.size, spacing=self.spacing, colors=self.colors)
+
+    def get_animation(self, animation: str) -> Animation:
+        animation_map = {
+            "blink": self.blink,
+            "colorcycle": self.colorcycle,
+            "comet": self.comet,
+            "chase": self.chase,
+            "pulse": self.pulse,
+            "sparkle": self.sparkle,
+            "solid": self.solid,
+            "rainbow": self.rainbow,
+            "sparkle_pulse": self.sparkle_pulse,
+            "rainbow_comet": self.rainbow_comet,
+            "rainbow_chase": self.rainbow_chase,
+            "rainbow_sparkle": self.rainbow_sparkle,
+            "custom_color_chase": self.custom_color_chase
+        }
+        return animation_map.get(animation.lower(), self.blink) 
+
+    def get_color(self, color: str) -> adafruit_led_animation.color:
+        color_map = {
+            "amber": AMBER,
+            "aqua": AQUA,
+            "black": BLACK,
+            "blue": BLUE,
+            "green": GREEN,
+            "orange": ORANGE,
+            "pink": PINK,
+            "purple": PURPLE,
+            "red": RED,
+            "white": WHITE,
+            "yellow": YELLOW,
+            "gold": GOLD,
+            "jade": JADE,
+            "magenta": MAGENTA,
+            "old_lace": OLD_LACE,
+            "teal": TEAL
+        }
+        return color_map.get(color.lower(), BLACK) 
 
     async def set_pixel_color(self, i, color):
-        self.STRIP.setPixelColor(int(i), int(color))
+        self.pixels.setPixelColor(int(i), int(color))
 
     async def set_pixel_colors(self, pixel_colors):
         for pix_color in pixel_colors:
-            self.STRIP.setPixelColor(int(pix_color[0]), int(pix_color[1]))
+            self.pixels.setPixelColor(int(pix_color[0]), int(pix_color[1]))
 
     async def show(self):
-        self.STRIP.show()
+        self.pixels.show()
 
     @classmethod
     def new(cls, config: ComponentConfig, dependencies: Mapping[ResourceName, ResourceBase]) -> Self:
@@ -205,7 +261,7 @@ class LedModel(Generic):
         pin: microcontroller.Pin = self.initialize_pin(pin_number)
         order: any = self.initialize_pixel_order(pixel_order)
         self.pixels = neopixel.NeoPixel(
-            pin, num_pixels, brightness=brightness, pixel_order=order
+            pin, num_pixels, brightness=brightness, auto_write=False, pixel_order=order
         )
 
         self.regenerate_animations()
