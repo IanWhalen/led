@@ -5,7 +5,7 @@ from typing import ClassVar, Mapping, Optional, Sequence
 from rpi_ws281x import Adafruit_NeoPixel
 from typing_extensions import Self
 from viam.components.generic import Generic
-from viam.logging import getLogger
+from viam import logging
 from viam.proto.app.robot import ComponentConfig
 from viam.proto.common import ResourceName
 from viam.resource.base import ResourceBase
@@ -50,7 +50,7 @@ LOG = logging.getLogger(__name__)
 
 
 class LedModel(Generic):
-    MODEL: ClassVar[Model] = Model(ModelFamily("weatherbox", "weatherbox"), "neopixel")
+    MODEL: ClassVar[Model] = Model.from_string('vijayvuyyuru:animate:neopixel')
 
     pixels: neopixel.NeoPixel = None
     # Animation settings
