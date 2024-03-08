@@ -103,7 +103,7 @@ class LedModel(Generic):
             if self.event.is_set():
                 return
             
-            animation = self.get_animation(self.annimation_name)
+            animation = self.get_animation(self.animation_name)
             animation.animate()
 
     async def do_command(
@@ -114,7 +114,7 @@ class LedModel(Generic):
             match name:
                 # TODO should prob validate this
                 case "animation":
-                    self.annimation_name = args
+                    self.animation_name = args
                 case "speed":
                     self.speed = args
                 case "colors":
