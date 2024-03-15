@@ -65,7 +65,7 @@ class LedModel(Generic):
     step: int = 1
 
     # Animation configuration
-    animation_name: str = 'sparkle'
+    animation_name: str = 'blink'
     blink: Animation = None
     colorcycle: Animation = None
     comet: Animation = None
