@@ -112,7 +112,7 @@ class LedModel(Generic):
         result = {}
         should_regenerate = True
         LOG.error("in do command")
-        for name, args in command.items():
+        for (name, args) in command.items():
             match name:
                 # TODO should prob validate this
                 case "animation":
@@ -153,9 +153,7 @@ class LedModel(Generic):
                     result[name] = True
         if should_regenerate:
             LOG.info("regnerating")
-            self.stop_thread()
             self.regenerate_animations()
-            self.start_thread()
         return result
     
     def regenerate_animations(self):
