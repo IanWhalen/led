@@ -113,47 +113,48 @@ class LedModel(Generic):
         should_regenerate = True
         LOG.error("in do command")
         for (name, args) in command.items():
-            match name:
-                # TODO should prob validate this
-                case "animation":
-                    LOG.info("animation")
-                    self.animation_name = args
-                case "speed":
-                    self.speed = args
-                case "colors":
-                    new_colors = []
-                    for color in args:
-                        new_colors.append(self.get_color(color))
-                    self.colors = new_colors
-                case "tail_length":
-                    self.tail_length = args
-                case "bounce":
-                    self.bounce = args
-                case "size":
-                    self.size = args
-                case "spacing":
-                    self.spacing = args
-                case "period":
-                    self.period = args
-                case "num_sparkles":
-                    self.num_sparkles = args
-                case "step":
-                    self.step = args
-                case "set_pixel_colors":
-                    should_regenerate = False
-                    await self.set_pixel_colors(args)
-                    result[name] = True
-                case "set_pixel_color":
-                    should_regenerate = False
-                    await self.set_pixel_color(*args)
-                    result[name] = True
-                case "show":
-                    should_regenerate = False
-                    await self.show()
-                    result[name] = True
-        if should_regenerate:
-            LOG.info("regnerating")
-            self.regenerate_animations()
+        #     match name:
+        #         # TODO should prob validate this
+        #         case "animation":
+        #             LOG.info("animation")
+        #             self.animation_name = args
+        #         case "speed":
+        #             self.speed = args
+        #         case "colors":
+        #             new_colors = []
+        #             for color in args:
+        #                 new_colors.append(self.get_color(color))
+        #             self.colors = new_colors
+        #         case "tail_length":
+        #             self.tail_length = args
+        #         case "bounce":
+        #             self.bounce = args
+        #         case "size":
+        #             self.size = args
+        #         case "spacing":
+        #             self.spacing = args
+        #         case "period":
+        #             self.period = args
+        #         case "num_sparkles":
+        #             self.num_sparkles = args
+        #         case "step":
+        #             self.step = args
+        #         case "set_pixel_colors":
+        #             should_regenerate = False
+        #             await self.set_pixel_colors(args)
+        #             result[name] = True
+        #         case "set_pixel_color":
+        #             should_regenerate = False
+        #             await self.set_pixel_color(*args)
+        #             result[name] = True
+        #         case "show":
+        #             should_regenerate = False
+        #             await self.show()
+        #             result[name] = True
+        # if should_regenerate:
+        #     LOG.info("regnerating")
+        #     self.regenerate_animations()
+            LOG.info(name, args)
         return result
     
     def regenerate_animations(self):
