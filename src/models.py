@@ -65,7 +65,7 @@ class LedModel(Generic):
     step: int = 1
 
     # Animation configuration
-    animation_name: str = 'blink'
+    animation_name: str = 'sparkle'
     blink: Animation = None
     colorcycle: Animation = None
     comet: Animation = None
@@ -111,6 +111,7 @@ class LedModel(Generic):
     ) -> Mapping[str, ValueTypes]:
         result = {}
         should_regenerate = True
+        LOG.error("in do command")
         for name, args in command.items():
             match name:
                 # TODO should prob validate this
@@ -152,7 +153,9 @@ class LedModel(Generic):
                     result[name] = True
         if should_regenerate:
             LOG.info("regnerating")
+            self.stop_thread()
             self.regenerate_animations()
+            self.start_thread()
         return result
     
     def regenerate_animations(self):
