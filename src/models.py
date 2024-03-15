@@ -110,10 +110,12 @@ class LedModel(Generic):
             self, command: Mapping[str, ValueTypes], *, timeout: Optional[float] = None,**kwargs,
     ) -> Mapping[str, ValueTypes]:
         result = {}
+        should_regenerate = True
         for name, args in command.items():
             match name:
                 # TODO should prob validate this
                 case "animation":
+                    LOG.info("animation")
                     self.animation_name = args
                 case "speed":
                     self.speed = args
@@ -137,19 +139,24 @@ class LedModel(Generic):
                 case "step":
                     self.step = args
                 case "set_pixel_colors":
+                    should_regenerate = False
                     await self.set_pixel_colors(args)
                     result[name] = True
                 case "set_pixel_color":
+                    should_regenerate = False
                     await self.set_pixel_color(*args)
                     result[name] = True
                 case "show":
+                    should_regenerate = False
                     await self.show()
                     result[name] = True
-
-        self.regenerate_animations()
+        if should_regenerate:
+            LOG.info("regnerating")
+            self.regenerate_animations()
         return result
     
     def regenerate_animations(self):
+        LOG.info("regenerating animations")
         self.blink = Blink(self.pixels, speed=self.speed, color=self.colors[0])
         self.colorcycle = ColorCycle(self.pixels, speed=self.speed, colors=self.colors)
         self.comet = Comet(self.pixels, speed=self.speed, color=self.colors[0], tail_length=self.tail_length, bounce=self.bounce)
@@ -157,12 +164,14 @@ class LedModel(Generic):
         self.pulse = Pulse(self.pixels, speed=self.speed, period=self.period, color=self.colors[0])
         self.sparkle = Sparkle(self.pixels, speed=self.speed, color=self.colors[0], num_sparkles=self.num_sparkles)
         self.solid = Solid(self.pixels, color=self.colors[0])
+        LOG.info("halfway")
         self.rainbow = Rainbow(self.pixels, speed=self.speed, period=self.period)
         self.sparkle_pulse = SparklePulse(self.pixels, speed=self.speed, period=self.period, color=self.colors[0])
         self.rainbow_comet = RainbowComet(self.pixels, speed=self.speed, tail_length=self.tail_length, bounce=self.bounce)
         self.rainbow_chase = RainbowChase(self.pixels, speed=self.speed, size=self.size, spacing=self.spacing, step=self.step)
         self.rainbow_sparkle = RainbowSparkle(self.pixels, speed=self.speed, num_sparkles=self.num_sparkles)
         self.custom_color_chase = CustomColorChase(self.pixels, speed=self.speed, size=self.size, spacing=self.spacing, colors=self.colors)
+        LOG.info("donezo")
 
     def get_animation(self, animation: str) -> Animation:
         animation_map = {
