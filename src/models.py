@@ -1,4 +1,5 @@
 from functools import wraps
+import threading
 import time
 from typing import ClassVar, Mapping, Optional, Sequence
 
@@ -12,6 +13,7 @@ from viam.resource.base import ResourceBase
 from viam.resource.types import Model, ModelFamily
 from viam.utils import ValueTypes
 import asyncio
+import sys
 
 from viam.proto.app.robot import ComponentConfig
 from viam.proto.common import ResourceName
@@ -63,117 +65,97 @@ class LedModel(Generic):
     period: int = 1
     num_sparkles: int = 1
     step: int = 1
+    
+    animation_map:dict
 
     # Animation configuration
-    animation_name: str = 'blink'
-    blink: Animation = None
-    colorcycle: Animation = None
-    comet: Animation = None
-    chase: Animation = None
-    pulse: Animation = None
-    sparkle: Animation = None
-    solid: Animation = None
-    rainbow: Animation = None
-    sparkle_pulse: Animation = None
-    rainbow_comet: Animation = None
-    rainbow_chase: Animation =None
-    rainbow_sparkle: Animation = None
-    custom_color_chase: Animation = None
+    active_animation:Animation = None
+    active_animations:list[Animation] = None
 
     # Animation thread settings
     thread = None
-    event = None
+    should_run = True
+    use_sequence = False
 
-    def thread_run(self):
-        loop = asyncio.get_event_loop()
-        loop.create_task(self.animate())
-
+    # def stop_thread(self):
+    #     sys.stdout.write("stopping thread\n")
+    #     if self.thread is not None and self.event is not None:
+    #         self.event.set()
+    #         self.thread.join()
+    #     sys.stdout.flush()
+    
+    def animate(self):
+        if self.use_sequence:
+            LOG.error("unimplemented")
+        else:
+            if self.active_animation is not None:
+                while True:
+                    self.active_animation.animate()
+                    if not self.should_run:
+                        LOG.info("exiting")
+                        break
+                    
     def start_thread(self):
-        self.thread = Thread(target=self.thread_run())
-        self.event = Event()
+        self.thread = threading.Thread(target=self.animate)
         self.thread.start()
-
-    def stop_thread(self):
-        if self.thread is not None and self.event is not None:
-            self.event.set()
-            self.thread.join()
-
-    async def animate(self):
-        while True:
-            if self.event.is_set():
-                return
-            
-            animation = self.get_animation(self.animation_name)
-            animation.animate()
+                
 
     async def do_command(
             self, command: Mapping[str, ValueTypes], *, timeout: Optional[float] = None,**kwargs,
     ) -> Mapping[str, ValueTypes]:
         result = {}
-        should_regenerate = True
         LOG.error("in do command")
         for (name, args) in command.items():
-        #     match name:
-        #         # TODO should prob validate this
-        #         case "animation":
-        #             LOG.info("animation")
-        #             self.animation_name = args
-        #         case "speed":
-        #             self.speed = args
-        #         case "colors":
-        #             new_colors = []
-        #             for color in args:
-        #                 new_colors.append(self.get_color(color))
-        #             self.colors = new_colors
-        #         case "tail_length":
-        #             self.tail_length = args
-        #         case "bounce":
-        #             self.bounce = args
-        #         case "size":
-        #             self.size = args
-        #         case "spacing":
-        #             self.spacing = args
-        #         case "period":
-        #             self.period = args
-        #         case "num_sparkles":
-        #             self.num_sparkles = args
-        #         case "step":
-        #             self.step = args
-        #         case "set_pixel_colors":
-        #             should_regenerate = False
-        #             await self.set_pixel_colors(args)
-        #             result[name] = True
-        #         case "set_pixel_color":
-        #             should_regenerate = False
-        #             await self.set_pixel_color(*args)
-        #             result[name] = True
-        #         case "show":
-        #             should_regenerate = False
-        #             await self.show()
-        #             result[name] = True
-        # if should_regenerate:
-        #     LOG.info("regnerating")
-        #     self.regenerate_animations()
-            LOG.info(name, args)
+            match name:
+                # TODO should prob validate this
+                case "animation":
+                    LOG.info("animation")
+                    self.active_animation = self.get_animation(args)
+                case "speed":
+                    self.speed = float(args)
+                case "colors":
+                    new_colors = []
+                    for color in args:
+                        new_colors.append(self.get_color(color))
+                    LOG.info(new_colors)
+                    LOG.info(len(new_colors))
+                    self.colors = new_colors
+                case "tail_length":
+                    self.tail_length = args
+                case "bounce":
+                    self.bounce = args
+                case "size":
+                    self.size = args
+                case "spacing":
+                    self.spacing = args
+                case "period":
+                    self.period = args
+                case "speed":
+                    self.speed = args
+                case "num_sparkles":
+                    self.num_sparkles = args
+                case "step":
+                    self.step = args
+                case "set_pixel_colors":
+                    should_regenerate = False
+                    await self.set_pixel_colors(args)
+                    result[name] = True
+                case "set_pixel_color":
+                    should_regenerate = False
+                    await self.set_pixel_color(*args)
+                    result[name] = True
+                case "show":
+                    should_regenerate = False
+                    await self.show()
+                    result[name] = True
+                case _:
+                    raise ValueError("invalid arg")
+        self.regenerate_animations()
+        self.should_run = False
+        self.thread.join()
+        self.should_run = True
+        self.start_thread()
         return result
-    
-    def regenerate_animations(self):
-        LOG.info("regenerating animations")
-        self.blink = Blink(self.pixels, speed=self.speed, color=self.colors[0])
-        self.colorcycle = ColorCycle(self.pixels, speed=self.speed, colors=self.colors)
-        self.comet = Comet(self.pixels, speed=self.speed, color=self.colors[0], tail_length=self.tail_length, bounce=self.bounce)
-        self.chase = Chase(self.pixels, speed=self.speed, size=self.size, spacing=self.spacing, color=self.colors[0])
-        self.pulse = Pulse(self.pixels, speed=self.speed, period=self.period, color=self.colors[0])
-        self.sparkle = Sparkle(self.pixels, speed=self.speed, color=self.colors[0], num_sparkles=self.num_sparkles)
-        self.solid = Solid(self.pixels, color=self.colors[0])
-        LOG.info("halfway")
-        self.rainbow = Rainbow(self.pixels, speed=self.speed, period=self.period)
-        self.sparkle_pulse = SparklePulse(self.pixels, speed=self.speed, period=self.period, color=self.colors[0])
-        self.rainbow_comet = RainbowComet(self.pixels, speed=self.speed, tail_length=self.tail_length, bounce=self.bounce)
-        self.rainbow_chase = RainbowChase(self.pixels, speed=self.speed, size=self.size, spacing=self.spacing, step=self.step)
-        self.rainbow_sparkle = RainbowSparkle(self.pixels, speed=self.speed, num_sparkles=self.num_sparkles)
-        self.custom_color_chase = CustomColorChase(self.pixels, speed=self.speed, size=self.size, spacing=self.spacing, colors=self.colors)
-        LOG.info("donezo")
 
     def get_animation(self, animation: str) -> Animation:
         animation_map = {
@@ -192,6 +174,21 @@ class LedModel(Generic):
             "custom_color_chase": self.custom_color_chase
         }
         return animation_map.get(animation.lower(), self.blink) 
+    
+    def regenerate_animations(self):
+        self.blink = Blink(self.pixels, speed=self.speed, color=self.colors[0])
+        self.colorcycle = ColorCycle(self.pixels, speed=self.speed, colors=self.colors)
+        self.comet = Comet(self.pixels, speed=self.speed, color=self.colors[0], tail_length=self.tail_length, bounce=self.bounce)
+        self.chase = Chase(self.pixels, speed=self.speed, size=self.size, spacing=self.spacing, color=self.colors[0])
+        self.pulse = Pulse(self.pixels, speed=self.speed, period=self.period, color=self.colors[0])
+        self.sparkle = Sparkle(self.pixels, speed=self.speed, color=self.colors[0], num_sparkles=self.num_sparkles)
+        self.solid = Solid(self.pixels, color=self.colors[0])
+        self.rainbow = Rainbow(self.pixels, speed=self.speed, period=self.period)
+        self.sparkle_pulse = SparklePulse(self.pixels, speed=self.speed, period=self.period, color=self.colors[0])
+        self.rainbow_comet = RainbowComet(self.pixels, speed=self.speed, tail_length=self.tail_length, bounce=self.bounce)
+        self.rainbow_chase = RainbowChase(self.pixels, speed=self.speed, size=self.size, spacing=self.spacing, step=self.step)
+        self.rainbow_sparkle = RainbowSparkle(self.pixels, speed=self.speed, num_sparkles=self.num_sparkles)
+        self.custom_color_chase = CustomColorChase(self.pixels, speed=self.speed, size=self.size, spacing=self.spacing, colors=self.colors)
 
     def get_color(self, color: str) -> adafruit_led_animation.color:
         color_map = {
@@ -212,14 +209,8 @@ class LedModel(Generic):
             "old_lace": OLD_LACE,
             "teal": TEAL
         }
+        
         return color_map.get(color.lower(), BLACK) 
-
-    async def set_pixel_color(self, i, color):
-        self.pixels.setPixelColor(int(i), int(color))
-
-    async def set_pixel_colors(self, pixel_colors):
-        for pix_color in pixel_colors:
-            self.pixels.setPixelColor(int(pix_color[0]), int(pix_color[1]))
 
     async def show(self):
         self.pixels.show()
@@ -263,7 +254,6 @@ class LedModel(Generic):
     def reconfigure(self,
                     config: ComponentConfig,
                     dependencies: Mapping[ResourceName, ResourceBase]):
-        self.stop_thread()
 
         pin_number: str = config.attributes.fields["pin"].string_value
         num_pixels: int = int(config.attributes.fields["num_pixels"].number_value)
@@ -274,11 +264,11 @@ class LedModel(Generic):
         self.pixels = neopixel.NeoPixel(
             pin, num_pixels, brightness=brightness, auto_write=False, pixel_order=order
         )
-
         self.regenerate_animations()
-
-        self.start_thread()
+        if self.thread is None:
+            self.should_run = True
+            self.start_thread()
     
     def __del__(self):
         LOG.info("Stopping module")
-        self.stop_thread()
+        self.should_run = False
