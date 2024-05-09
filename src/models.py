@@ -44,6 +44,7 @@ from adafruit_led_animation.animation.rainbowchase import RainbowChase
 from adafruit_led_animation.animation.rainbowsparkle import RainbowSparkle
 from adafruit_led_animation.animation.customcolorchase import CustomColorChase
 from adafruit_led_animation.animation import Animation
+from adafruit_led_animation.sequence import AnimationSequence
 import adafruit_led_animation
 
 
@@ -69,56 +70,70 @@ class LedModel(Generic):
     animation_map:dict
 
     # Animation configuration
-    active_animation:Animation = None
-    active_animations:list[Animation] = None
+    active_animation:str = ""
+    animation_sequence:AnimationSequence = None
 
     # Animation thread settings
     thread = None
     should_run = True
     use_sequence = False
-
-    # def stop_thread(self):
-    #     sys.stdout.write("stopping thread\n")
-    #     if self.thread is not None and self.event is not None:
-    #         self.event.set()
-    #         self.thread.join()
-    #     sys.stdout.flush()
     
     def animate(self):
-        if self.use_sequence:
-            LOG.error("unimplemented")
-        else:
-            if self.active_animation is not None:
-                while True:
-                    self.active_animation.animate()
-                    if not self.should_run:
-                        LOG.info("exiting")
-                        break
+        if self.active_animation is not "":
+            while True:
+                if self.use_sequence:
+                    self.animation_sequence.animate()
+                else:
+                    self.get_animation(self.active_animation).animate()
+                if not self.should_run:
+                    LOG.info("exiting")
+                    break
                     
     def start_thread(self):
         self.thread = threading.Thread(target=self.animate)
         self.thread.start()
+    
+    def stop_thread(self):
+        self.should_run = False
+        self.thread.join()
+        
+    def reset_thread(self):
+        self.should_run = False
+        self.thread.join()
+        self.regenerate_animations()
+        self.should_run = True
+        self.start_thread()
                 
 
     async def do_command(
             self, command: Mapping[str, ValueTypes], *, timeout: Optional[float] = None,**kwargs,
     ) -> Mapping[str, ValueTypes]:
         result = {}
-        LOG.error("in do command")
+        should_regenerate = True
         for (name, args) in command.items():
             match name:
                 # TODO should prob validate this
                 case "animation":
                     LOG.info("animation")
-                    self.active_animation = self.get_animation(args)
+                    # get animation as validation (hacky)
+                    self.get_animation(args)
+                    self.active_animation = args
+                    self.use_sequence = False
+                case "animations":
+                    animations = []
+                    for animation in args:
+                        animations.append(self.get_animation(animation))
+                    self.animation_sequence = AnimationSequence(animations, advance_interval=3)
+                    self.use_sequence = True
                 case "speed":
                     self.speed = float(args)
+                case "color":
+                    color = self.get_color(args)
+                    self.colors = [color]
                 case "colors":
                     new_colors = []
                     for color in args:
                         new_colors.append(self.get_color(color))
-                    LOG.info(new_colors)
-                    LOG.info(len(new_colors))
                     self.colors = new_colors
                 case "tail_length":
                     self.tail_length = args
@@ -136,25 +151,16 @@ class LedModel(Generic):
                     self.num_sparkles = args
                 case "step":
                     self.step = args
-                case "set_pixel_colors":
+                case "set_pixel_color" | "set_pixel_colors":
+                    self.stop_thread()
                     should_regenerate = False
-                    await self.set_pixel_colors(args)
-                    result[name] = True
-                case "set_pixel_color":
-                    should_regenerate = False
-                    await self.set_pixel_color(*args)
-                    result[name] = True
-                case "show":
-                    should_regenerate = False
-                    await self.show()
+                    self.pixels.fill((0, 0, 0))
+                    self.set_pixel_colors(args)
                     result[name] = True
                 case _:
                     raise ValueError("invalid arg")
-        self.regenerate_animations()
-        self.should_run = False
-        self.thread.join()
-        self.should_run = True
-        self.start_thread()
+        if should_regenerate:
+            self.reset_thread()
         return result
 
     def get_animation(self, animation: str) -> Animation:
@@ -173,9 +179,14 @@ class LedModel(Generic):
             "rainbow_sparkle": self.rainbow_sparkle,
             "custom_color_chase": self.custom_color_chase
         }
-        return animation_map.get(animation.lower(), self.blink) 
+        
+        animation = animation_map.get(animation.lower())
+        if not animation:
+            raise ValueError("invalid animation name")
+        return animation 
     
     def regenerate_animations(self):
+        LOG.info(self.colors[0])
         self.blink = Blink(self.pixels, speed=self.speed, color=self.colors[0])
         self.colorcycle = ColorCycle(self.pixels, speed=self.speed, colors=self.colors)
         self.comet = Comet(self.pixels, speed=self.speed, color=self.colors[0], tail_length=self.tail_length, bounce=self.bounce)
@@ -210,10 +221,16 @@ class LedModel(Generic):
             "teal": TEAL
         }
         
-        return color_map.get(color.lower(), BLACK) 
-
-    async def show(self):
-        self.pixels.show()
+        strip_color = color_map.get(color.lower())
+        if not strip_color:
+            raise ValueError(f"invalid color name {color}")
+        return strip_color 
+        
+    def set_pixel_colors(self, pixel_colors:dict):
+        for pixel, color in pixel_colors.items():
+            # convert from floats to ints
+            self.pixels[int(pixel)] = [int(y) for y in color]
+        self.pixels.show()        
 
     @classmethod
     def new(cls, config: ComponentConfig, dependencies: Mapping[ResourceName, ResourceBase]) -> Self:
