@@ -1,13 +1,18 @@
 {
-  "module_id": "ianwhalen:neopixel",
-  "visibility": "public",
-  "url": "https://github.com/ianwhalen/led",
-  "description": "A driver for the Adafruit Neopixel line of LED displays.",
+  "module_id": "vijayvuyyuru:neopixel",
+  "visibility": "private",
+  "url": "https://github.com/vijayvuyyuru/led",
+  "description": "This module provides control over adafruit neopixel leds",
   "models": [
     {
       "api": "rdk:component:generic",
-      "model": "ianwhalen:ianwhalen:neopixel"
+      "model": "vijayvuyyuru:animate:neopixel"
     }
   ],
-  "entrypoint": "run.sh"
+  "build": {
+    "build": "sh build.sh",
+    "path": "dist/archive.tar.gz",
+    "arch" : ["linux/arm64", "linux/amd64"]
+  },
+  "entrypoint": "dist/main"
 }

@@ -1,0 +1,87 @@
+{
+    "components": [
+      {
+        "namespace": "rdk",
+        "attributes": {},
+        "depends_on": [],
+        "name": "pi",
+        "model": "rdk:builtin:pi",
+        "type": "board"
+      },
+      {
+        "name": "temperature",
+        "model": "rdk:builtin:ds18b20",
+        "type": "sensor",
+        "namespace": "rdk",
+        "attributes": {
+          "unique_id": "3de104571f75"
+        },
+        "depends_on": []
+      },
+      {
+        "type": "generic",
+        "namespace": "rdk",
+        "attributes": {
+          "led_count": 120,
+          "led_pin": 12
+        },
+        "depends_on": [],
+        "name": "led",
+        "model": "weatherbox:weatherbox:neopixel"
+      },
+      {
+        "namespace": "rdk",
+        "attributes": {
+          "led_pin": 10,
+          "led_count": 120
+        },
+        "depends_on": [],
+        "name": "led1",
+        "model": "weatherbox:weatherbox:neopixel",
+        "type": "generic"
+      },
+      {
+        "name": "neopixel",
+        "model": "vijayvuyyuru:animate:neopixel",
+        "type": "generic",
+        "namespace": "rdk",
+        "attributes": {},
+        "depends_on": []
+      }
+    ],
+    "modules": [
+      {
+        "name": "led",
+        "executable_path": "/home/weatherbox/led-module/run.sh",
+        "type": "local"
+      },
+      {
+        "type": "registry",
+        "name": "vijayvuyyuru_neopixel",
+        "module_id": "vijayvuyyuru:neopixel",
+        "version": "0.0.1"
+      }
+    ],
+    "agent_config": {
+      "subsystems": {
+        "agent-provisioning": {
+          "disable_subsystem": false,
+          "release_channel": "stable",
+          "pin_version": "",
+          "pin_url": ""
+        },
+        "viam-agent": {
+          "release_channel": "stable",
+          "pin_version": "",
+          "pin_url": "",
+          "disable_subsystem": false
+        },
+        "viam-server": {
+          "disable_subsystem": false,
+          "release_channel": "stable",
+          "pin_version": "",
+          "pin_url": ""
+        }
+      }
+    }
+  }
