@@ -86,7 +86,6 @@ class LedModel(Generic):
                 else:
                     self.get_animation(self.active_animation).animate()
                 if not self.should_run:
-                    LOG.info("exiting")
                     break
                     
     def start_thread(self):
@@ -123,7 +122,7 @@ class LedModel(Generic):
                     animations = []
                     for animation in args:
                         animations.append(self.get_animation(animation))
-                    self.animation_sequence = AnimationSequence(animations, advance_interval=3)
+                    self.animation_sequence = AnimationSequence(*animations, advance_interval=3)
                     self.use_sequence = True
                 case "speed":
                     self.speed = float(args)
@@ -136,29 +135,30 @@ class LedModel(Generic):
                         new_colors.append(self.get_color(color))
                     self.colors = new_colors
                 case "tail_length":
-                    self.tail_length = args
+                    self.tail_length = int(args)
                 case "bounce":
-                    self.bounce = args
+                    self.bounce = int(args)
                 case "size":
-                    self.size = args
+                    self.size = int(args)
                 case "spacing":
-                    self.spacing = args
+                    self.spacing = int(args)
                 case "period":
-                    self.period = args
+                    self.period = int(args)
                 case "speed":
-                    self.speed = args
+                    self.speed = int(args)
                 case "num_sparkles":
-                    self.num_sparkles = args
+                    self.num_sparkles = int(args)
                 case "step":
-                    self.step = args
+                    self.step = int(args)
                 case "set_pixel_color" | "set_pixel_colors":
                     self.stop_thread()
                     should_regenerate = False
-                    self.pixels.fill((0, 0, 0))
                     self.set_pixel_colors(args)
                     result[name] = True
                 case _:
                     raise ValueError("invalid arg")
+        # blank all leds between animations to avoid weird looking strip
+        self.pixels.fill((0, 0, 0))
         if should_regenerate:
             self.reset_thread()
         return result
