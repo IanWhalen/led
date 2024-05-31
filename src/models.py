@@ -109,6 +109,7 @@ class LedModel(Generic):
     ) -> Mapping[str, ValueTypes]:
         result = {}
         should_regenerate = True
+        LOG.info("in do command")
         for (name, args) in command.items():
             match name:
                 # TODO should prob validate this
@@ -118,6 +119,7 @@ class LedModel(Generic):
                     self.get_animation(args)
                     self.active_animation = args
                     self.use_sequence = False
+                    LOG.info(self.pixels)
                 case "animations":
                     animations = []
                     for animation in args:
@@ -179,11 +181,12 @@ class LedModel(Generic):
             "rainbow_sparkle": self.rainbow_sparkle,
             "custom_color_chase": self.custom_color_chase
         }
+        anime_name = animation
         
-        animation = animation_map.get(animation.lower())
-        if not animation:
+        animationl = animation_map.get(anime_name.lower())
+        if not animationl:
             raise ValueError("invalid animation name")
-        return animation 
+        return animationl 
     
     def regenerate_animations(self):
         LOG.info(self.colors[0])
@@ -234,9 +237,9 @@ class LedModel(Generic):
 
     @classmethod
     def new(cls, config: ComponentConfig, dependencies: Mapping[ResourceName, ResourceBase]) -> Self:
-        cls.led_count = int(config.attributes.fields["led_count"].number_value)
-        cls.led_pin = int(config.attributes.fields["led_pin"].number_value)
         led_module = cls(config.name)
+        led_module.led_count = int(config.attributes.fields["led_count"].number_value)
+        led_module.led_pin = int(config.attributes.fields["led_pin"].number_value)
         led_module.reconfigure(config, dependencies)
         return led_module
 
@@ -278,6 +281,7 @@ class LedModel(Generic):
         brightness: float = config.attributes.fields["brightness"].number_value
         pin: microcontroller.Pin = self.initialize_pin(pin_number)
         order: any = self.initialize_pixel_order(pixel_order)
+        LOG.info(f"pixel order on this instance: {pin_number}")
         self.pixels = neopixel.NeoPixel(
             pin, num_pixels, brightness=brightness, auto_write=False, pixel_order=order
         )
