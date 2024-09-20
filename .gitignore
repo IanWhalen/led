@@ -9,3 +9,5 @@ module.tar.gz
 build/
 dist/
 main.spec
+
+.DS_Store
