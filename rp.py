@@ -234,11 +234,11 @@ pixel_display.set_animation(1, {"animation": "rainbow_chase"})
 pixel_display.set_animation(2, {"speed": .2, "tail_length": 30, "animation": "rainbow_comet"})
 
 
-count = 0
 
 while True:
     print("shuold be blinking")
-    pixel_display.set_animation(2, {"speed": .2, "tail_length": 30, "animation": "rainbow_comet"})
+    pixel_display.set_animation(2, {"speed": .02, "tail_length": 30, "animation": "rainbow_comet"})
+    count = 0
 
     while count < 5000:
         pixel_display.animate()
