@@ -30,20 +30,20 @@ first_led_pin = board.NEOPIXEL0
 num_pixels = num_strands * strand_length
 
 # Make the object to control the pixels
-pixels = NeoPxl8(
-    first_led_pin,
-    num_pixels,
-    num_strands=num_strands,
-    auto_write=False,
-    brightness=0.25,
-)
+# pixels = NeoPxl8(
+#     first_led_pin,
+#     num_pixels,
+#     num_strands=num_strands,
+#     auto_write=False,
+#     brightness=0.25,
+# )
 
-def strand(n, pixels_count):
-    return PixelMap(
-        pixels,
-        range(n * pixels_count, (n + 1) * pixels_count),
-        individual_pixels=True,
-    )
+# def strand(n, pixels_count):
+#     return PixelMap(
+#         pixels,
+#         range(n * pixels_count, (n + 1) * pixels_count),
+#         individual_pixels=True,
+#     )
     
     
 # class PixelDisplay:
@@ -71,12 +71,12 @@ class PixelStrand:
     step: int = 1
     def __init__(self, strand) -> None:
         self.strand = strand
-        self.active_animation = ""
+        self.active_animation = "blink"
+        self.regenerate_animations()
         
     def set_animation(self, params:dict) -> None:
         for (name, args) in params.items():
             if name == "animation":
-                animation_changed = True
                 self.active_animation = args
             elif name == "speed":
                 self.speed = float(args)
@@ -105,7 +105,7 @@ class PixelStrand:
             elif name == "step":
                 self.step = int(args)
             else:
-                raise ValueError("invalid arg")
+                raise ValueError(f"invalid arg: {name}")
         self.regenerate_animations()
                 
     def get_color(self, color: str) -> adafruit_led_animation.color:
@@ -171,30 +171,67 @@ class PixelStrand:
     def get_active_animation(self) -> Animation:
         return self.get_animation(self.active_animation)
 
+class PixelDisplay:
+    num_strands = 0
+    strand_length = 0
+    first_led_pin = board.NEOPIXEL0
+    brightness = 0.0
 
-# Create the 8 virtual strands
-strands = [strand(i, strand_length) for i in range(num_strands)]
+    pixels = None
+    strand_list = []
+    
+    animations:AnimationGroup = None
 
-def reconfigure_pixels(pixels_count, num_strands, brightness):
-    global pixels
-    pixels.fill(0)
-    pixels.show()
-    time.sleep(0.1)
-    pixels.deinit()
-    new_pixels = NeoPxl8(
-        board.NEOPIXEL0,
-        num_strands*pixels_count,
-        num_strands=num_strands,
-        auto_write=False,
-        brightness=brightness,
-    )
-    pixels = new_pixels
-    print('regenerated pixels')
-    global strands
-    strands = [strand(i, pixels_count) for i in range(num_strands)]
-    print('regenerated strands')
+    def __init__(self, num_strands, strand_length, brightness) -> None:
+        self.reconfigure(num_strands, strand_length, brightness)
+        
+    def reconfigure(self, num_strands, strand_length, brightness) ->None:
+        if num_strands != 0:
+            self.num_strands = num_strands
+        if strand_length != 0:
+            self.strand_length = strand_length
+        if brightness != 0.0:
+            self.brightness = brightness
+            
+        if self.pixels is not None:
+            self.pixels.deinit()
+        self.pixels = NeoPxl8(
+            first_led_pin,
+            self.strand_length * self.num_strands,
+            num_strands=self.num_strands,
+            auto_write=False,
+            brightness=self.brightness,
+        )
+        print("set pixels")
+        strands = [self.strand(i, self.strand_length) for i in range(self.num_strands)]
+        strands_list = []
+        for strand in strands:
+            strands_list.append(PixelStrand(strand))
+        self.strand_list = strands_list
+        print("set strand list")
+        print(self.strand_list)
+        print(f"reconfigured with {self.num_strands} strands, {self.strand_length} pixels per strand, and brigthness of {self.brightness}")
+        
+    def animate(self):
+        if self.animations == None:
+            raw_anim = [pxs.get_active_animation() for pxs in self.strand_list]
+            self.animations = AnimationGroup(*raw_anim)
+        self.animations.animate()
+    
+    def set_animation(self, strand_index:int, params:dict):
+        if strand_index >= len(self.strand_list):
+            raise ValueError("index out of bound for configured number of leds")
+        self.strand_list[strand_index].set_animation(params)
+        # regnerate animation group if one changed
+        self.animations = AnimationGroup(*[pxs.get_active_animation() for pxs in self.strand_list])
 
-
+        
+    def strand(self, n, pixels_count):
+        return PixelMap(
+            self.pixels,
+            range(n * pixels_count, (n + 1) * pixels_count),
+            individual_pixels=True,
+        )
 
 # For each strand, create a comet animation of a different color
 # animations = [
@@ -211,53 +248,29 @@ def reconfigure_pixels(pixels_count, num_strands, brightness):
 
     # Solid(strands[0], color=TEAL),
     #CustomColorChase(strands[0], speed=0.02, size=30, spacing=0, colors=[(50,255,5), (255,0,120), (255,0,5)])
+
+count = 0
+myPixelStrands = []
+pixel_display = PixelDisplay(num_strands=num_strands, strand_length=strand_length, brightness=.25)
+pixel_display.set_animation(0, {"speed": .2, "period": 2})
+pixel_display.set_animation(0, {"animation": "rainbow"})
+pixel_display.set_animation(1, {"speed": .1, "size": 10, "spacing": 2, "step": 1 })
+pixel_display.set_animation(1, {"animation": "rainbow_chase"})
+
+count = 0
+
 while True:
-    reconfigure_pixels(120, 3, .4)
-    animations = [
-        Pulse(strands[0], speed=0.2, color=(255,0,80), period=2),
-        Pulse(strands[1], speed=0.02, color=(255,0,80), period=5),
-        Pulse(strands[2], speed=0.02, color=(255,0,80), period=5)
-    ]
-
-    # Advance the animations by varying amounts so that they become staggered
-    # for i, animation in enumerate(animations):
-    #     animation._tail_start = 30 * 5 * i // 8  # pylint: disable=protected-access
-
-    # Group them so we can run them all at once
-    animations = AnimationGroup(*animations)
-
-    # Run the animations and report on the speed in frame per secodn
-    t0 = adafruit_ticks.ticks_ms()
-    frame_count = 0
+    print("shuold be blinking")
+    pixel_display.set_animation(2, {"animation": "blink"})
+    pixel_display.set_animation(2, {"speed": .1})
+    while count < 5000:
+        pixel_display.animate()
+        count += 1
+    pixel_display.set_animation(2, {"speed": .2, "tail_length": 30})
+    pixel_display.set_animation(2, {"animation": "rainbow_comet"})
+    print("changing animation")
     count = 0
-
-    while count < 10000:
-        animations.animate()
-        frame_count += 1
-        count += 1
-        t1 = adafruit_ticks.ticks_ms()
-        dt = adafruit_ticks.ticks_diff(t1, t0)
-        if dt > 1000:
-            print(f"{frame_count * 1000/dt:.1f}fps")
-            t0 = t1
-            frame_count = 0
-
-    reconfigure_pixels(30, 2, .2)
-    # animations = [
-    #     Pulse(strands[0], speed=0.2, color=(255,0,0), period=2),
-    #     Pulse(strands[1], speed=0.02, color=(255,0,0), period=5),
-    # ]
-    # animations = AnimationGroup(*animations)
-    myPixelStrands = []
-    for strand in strands:
-        myPixelStrands.append(PixelStrand(strand))
-    myPixelStrands[0].set_animation({"speed": .2, "period": 2})
-    myPixelStrands[0].set_animation({"animation": "rainbow"})
-    myPixelStrands[1].set_animation({"speed": .6, "size": 10, "spacing": 2, "step": 1 })
-    myPixelStrands[1].set_animation({"animation": "rainbow_chase"})
-    animations_temp = [pxs.get_active_animation() for pxs in myPixelStrands]
-    animations = AnimationGroup(*animations_temp)
-    while count < 200000:
-        animations.animate()
-        frame_count += 1
-        count += 1
+    while count < 5000:
+        pixel_display.animate()
+        count +=1
+        
