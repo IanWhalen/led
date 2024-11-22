@@ -18,9 +18,13 @@ from adafruit_led_animation.animation.rainbowsparkle import RainbowSparkle
 from adafruit_led_animation.animation.customcolorchase import CustomColorChase
 import time
 
+import busio
+
 
 from adafruit_led_animation.helper import PixelMap
 from adafruit_neopxl8 import NeoPxl8
+
+uart = busio.UART(board.TX, board.RX, baudrate=9600)
 
 # Customize for your strands here
 num_strands = 3
