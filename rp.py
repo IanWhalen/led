@@ -47,6 +47,8 @@ class PixelStrand:
         for (name, args) in params.items():
             if name == "animation":
                 self.active_animation = args
+                self.strand.fill((0,0,0))
+                self.strand.show()
             elif name == "speed":
                 self.speed = float(args)
             elif name == "color":
@@ -73,6 +75,13 @@ class PixelStrand:
                 self.num_sparkles = int(args)
             elif name == "step":
                 self.step = int(args)
+            elif  name == "set_pixel_colors":
+                # clear active animation if we're explicitly setting pixel colors and zero all pixels if switching from animation to manual mode
+                if self.active_animation != "":
+                    self.strand.fill((0,0,0))
+                    self.strand.show()
+                self.active_animation = ""
+                self.set_pixel_colors(args)
             else:
                 raise ValueError(f"invalid arg: {name}")
         self.regenerate_animations()
@@ -100,6 +109,12 @@ class PixelStrand:
         if not strip_color:
             raise ValueError(f"invalid color name {color}")
         return strip_color
+    
+    def set_pixel_colors(self, pixel_colors:dict):
+        for pixel, color in pixel_colors.items():
+            # convert from floats to ints
+            self.strand[int(pixel)] = [int(y) for y in color]
+        self.strand.show()   
     
     def regenerate_animations(self):
         self.blink = Blink(self.strand, speed=self.speed, color=self.colors[0])
@@ -138,7 +153,8 @@ class PixelStrand:
         return animationl 
 
     def get_active_animation(self) -> Animation:
-        return self.get_animation(self.active_animation)
+        if self.active_animation != "":
+            return self.get_animation(self.active_animation)
 
 class PixelDisplay:
     num_strands = 0
@@ -190,14 +206,16 @@ class PixelDisplay:
         if strand_index >= len(self.strand_list):
             raise ValueError("index out of bound for configured number of leds")
         self.strand_list[strand_index].set_animation(params)
-        if strand_index == 2:
-            print(self.strand_list[strand_index].get_active_animation())
-        # regnerate animation group if one changed
         self.regenerate_animation_group()
 
         
     def regenerate_animation_group(self):
-        raw_anim = [pxs.get_active_animation() for pxs in self.strand_list]
+        raw_anim = []
+        for pxs in self.strand_list:
+            a = pxs.get_active_animation()
+            # active animation can be none if we manually set pixel colors
+            if a is not None:
+                raw_anim.append(a)
         self.animations = AnimationGroup(*raw_anim)
 
         
@@ -208,25 +226,9 @@ class PixelDisplay:
             individual_pixels=True,
         )
 
-# For each strand, create a comet animation of a different color
-# animations = [
-#     Comet(strand, 0.02, (255,255,255), ring=True)
-#     for i, strand in enumerate(strands)
-# ]
-
-# working commands:     Pulse(strands[2], speed=0.2, color=(255,0,80), period=2),
-
-    #Pulse(strands[1], speed=0.2, color=(255,0,80), period=2),
-    #Pulse(strands[2], speed=0.2, color=(255,0,80), period=2),
-    # Blink(strand[1], 0.02, (255,125,128)),
-    #Sparkle(strand[3], 0.02, 2, (0,232,232))
-
-    # Solid(strands[0], color=TEAL),
-    #CustomColorChase(strands[0], speed=0.02, size=30, spacing=0, colors=[(50,255,5), (255,0,120), (255,0,5)])
-
 count = 0
 myPixelStrands = []
-pixel_display = PixelDisplay(num_strands=num_strands, strand_length=strand_length, brightness=.25)
+pixel_display = PixelDisplay(num_strands=num_strands, strand_length=strand_length, brightness=.50)
 pixel_display.set_animation(0, {"speed": .02, "period": 2})
 pixel_display.set_animation(0, {"animation": "rainbow"})
 pixel_display.set_animation(1, {"speed": .1, "size": 10, "spacing": 2, "step": 1 })
@@ -254,6 +256,13 @@ while True:
     print("changing animation 2") 
     pixel_display.set_animation(2, {"speed": .1, "animation": "comet"})
 
+    count = 0
+    while count < 5000:
+        pixel_display.animate() 
+        count +=1
+    
+    print("changing animation 2, should just be solid pixels now") 
+    pixel_display.set_animation(2, {"set_pixel_colors": {1: [0, 255, 0], 2: [0, 255, 0], 3: [0, 255, 0]}})
     count = 0
     while count < 5000:
         pixel_display.animate() 
