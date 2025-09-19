@@ -1,12 +1,12 @@
 {
-  "module_id": "vijayvuyyuru:neopixel",
-  "visibility": "private",
-  "url": "https://github.com/vijayvuyyuru/led",
+  "module_id": "ianwhalen:neopixel",
+  "visibility": "public",
+  "url": "https://github.com/ianwhalen/led",
   "description": "This module provides control over adafruit neopixel leds",
   "models": [
     {
       "api": "rdk:component:generic",
-      "model": "vijayvuyyuru:animate:neopixel"
+      "model": "ianwhalen:animate:neopixel"
     }
   ],
   "build": {
