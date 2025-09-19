@@ -6,3 +6,4 @@ adafruit-circuitpython-neopixel
 adafruit-circuitpython-led-animation
 RPi.GPIO
 gpiod
+lgpio
