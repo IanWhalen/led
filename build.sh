@@ -5,6 +5,7 @@ if [ "$UNAME" = "Linux" ]
 then
     echo "Installing venv on Linux"
     sudo apt-get install -y python3-venv
+    sudo apt-get install -y swig
 fi
 if [ "$UNAME" = "Darwin" ]
 then
